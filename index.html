@@ -71,6 +71,14 @@
                 document.getElementById('resEmail').innerText = "-";
                 document.getElementById('resTelefone').innerText = "-";
             });
+
+                        fetch(`${URL_BACKEND}/api/extrator/${cnpj}`, {
+                method: 'GET',
+                headers: {
+                    'X-Pinggy-No-Screen': 'true' // Isso fura o bloqueio do Pinggy
+                }
+            })
+            
         }
     </script>
 </body>
