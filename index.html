@@ -10,13 +10,13 @@
         input { width: 90%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
         button { width: 100%; padding: 10px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
         .resultado { margin-top: 20px; text-align: left; display: none; }
-        .erro { color: red; font-size: 14px; margin-top: 10px; }
+        .erro { color: red; font-size: 14px; margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Consulta Fornecedor PNCP</h2>
-        <input type="text" id="cnpjInput" placeholder="CNPJ do Órgão (Ex: 00394544000185)" maxlength="18">
+        <input type="text" id="cnpjInput" placeholder="CNPJ do Órgão (Ex: 09539920000157)" maxlength="18">
         <button onclick="buscar()">Pesquisar</button>
         <div id="msgErro" class="erro"></div>
         
@@ -29,8 +29,7 @@
     </div>
 
     <script>
-        // O link do seu túnel Pinggy já está configurado aqui:
-        const URL_BACKEND = "https://chkmy-2804-18-4093-81c6-cfca-cc15-cb22-126.run.pinggy-free.link";
+        const URL_BACKEND = "https://mitje-191-201-40-112.free.pinggy.net";
 
         function buscar() {
             const cnpj = document.getElementById('cnpjInput').value.replace(/\D/g, '');
@@ -51,11 +50,18 @@
             document.getElementById('resTelefone').innerText = "...";
             area.style.display = "block";
 
+            // Requisição única consolidada com o cabeçalho de desbloqueio
             fetch(`${URL_BACKEND}/api/extrator/${cnpj}`, {
-                method: 'GET'
+                method: 'GET',
+                headers: {
+                    'X-Pinggy-No-Screen': 'true' 
+                }
             })
             .then(res => {
-                if(!res.ok) throw new Error("Erro na API ou Sem Dados");
+                if(!res.ok) {
+                    // Captura e lança o erro exato enviado pelo Spring Boot
+                    return res.json().then(err => { throw new Error(err.erro || "Erro na API do PNCP (HTTP " + res.status + ")"); });
+                }
                 return res.json();
             })
             .then(dados => {
@@ -65,20 +71,12 @@
                 document.getElementById('resTelefone').innerText = dados.telefone || "Não encontrado";
             })
             .catch(erro => {
-                msgErro.innerText = "Falha ao extrair dados. Verifique se o órgão possui contratos recentes.";
+                msgErro.innerText = erro.message;
                 document.getElementById('resNome').innerText = "-";
                 document.getElementById('resCnpj').innerText = "-";
                 document.getElementById('resEmail').innerText = "-";
                 document.getElementById('resTelefone').innerText = "-";
             });
-
-                        fetch(`${URL_BACKEND}/api/extrator/${cnpj}`, {
-                method: 'GET',
-                headers: {
-                    'X-Pinggy-No-Screen': 'true' // Isso fura o bloqueio do Pinggy
-                }
-            })
-            
         }
     </script>
 </body>
