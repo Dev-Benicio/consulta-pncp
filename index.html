@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extrator PNCP</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f4f4f9; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; width: 350px; }
+        input { width: 90%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+        button { width: 100%; padding: 10px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        .resultado { margin-top: 20px; text-align: left; display: none; }
+        .erro { color: red; font-size: 14px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Consulta Fornecedor PNCP</h2>
+        <input type="text" id="cnpjInput" placeholder="CNPJ do Órgão (Ex: 00394544000185)" maxlength="18">
+        <button onclick="buscar()">Pesquisar</button>
+        <div id="msgErro" class="erro"></div>
+        
+        <div class="resultado" id="areaResultado">
+            <p><strong>Empresa:</strong> <span id="resNome"></span></p>
+            <p><strong>CNPJ:</strong> <span id="resCnpj"></span></p>
+            <p><strong>E-mail:</strong> <span id="resEmail"></span></p>
+            <p><strong>Telefone:</strong> <span id="resTelefone"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // O link do seu túnel Pinggy já está configurado aqui:
+        const URL_BACKEND = "https://chkmy-2804-18-4093-81c6-cfca-cc15-cb22-126.run.pinggy-free.link";
+
+        function buscar() {
+            const cnpj = document.getElementById('cnpjInput').value.replace(/\D/g, '');
+            const msgErro = document.getElementById('msgErro');
+            const area = document.getElementById('areaResultado');
+            
+            msgErro.innerText = "";
+            area.style.display = "none";
+
+            if (cnpj.length !== 14) {
+                msgErro.innerText = "CNPJ inválido. Digite 14 números.";
+                return;
+            }
+
+            document.getElementById('resNome').innerText = "Buscando...";
+            document.getElementById('resCnpj').innerText = "...";
+            document.getElementById('resEmail').innerText = "...";
+            document.getElementById('resTelefone').innerText = "...";
+            area.style.display = "block";
+
+            fetch(`${URL_BACKEND}/api/extrator/${cnpj}`, {
+                method: 'GET'
+            })
+            .then(res => {
+                if(!res.ok) throw new Error("Erro na API ou Sem Dados");
+                return res.json();
+            })
+            .then(dados => {
+                document.getElementById('resNome').innerText = dados.nomeEmpresa || "Não encontrado";
+                document.getElementById('resCnpj').innerText = dados.cnpj || "Não encontrado";
+                document.getElementById('resEmail').innerText = dados.email || "Não encontrado";
+                document.getElementById('resTelefone').innerText = dados.telefone || "Não encontrado";
+            })
+            .catch(erro => {
+                msgErro.innerText = "Falha ao extrair dados. Verifique se o órgão possui contratos recentes.";
+                document.getElementById('resNome').innerText = "-";
+                document.getElementById('resCnpj').innerText = "-";
+                document.getElementById('resEmail').innerText = "-";
+                document.getElementById('resTelefone').innerText = "-";
+            });
+        }
+    </script>
+</body>
+</html>
